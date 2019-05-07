@@ -5,7 +5,7 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  TouchableHighlight
+  Alert
 } from "react-native";
 
 import api from "../services/api";
@@ -13,8 +13,14 @@ import api from "../services/api";
 export default class Home extends Component {
 
   static navigationOptions = {
-    title: 'Lista de Celulares para Consertar'
+    title: 'Celulares para Conserto',
+    headerTitleStyle: {
+      textAlign: 'center', 
+      color: '#fafafa',
+      flex: 1
   }
+  }
+
   state = {
     docs: [],
   };
@@ -28,6 +34,10 @@ export default class Home extends Component {
       this.setState({ docs: response.data});
   };
 
+  handleNew = () => {
+    this.props.navigation.navigate("Cadastro")
+  }
+
   renderItem = ({ item }) => {
     return (
       <View style={styles.productContainer}>
@@ -37,15 +47,39 @@ export default class Home extends Component {
         <Text style={styles.productDescription}>{item.IMEI}</Text>
         <Text style={styles.productDescription}>{item.date}</Text>
 
-        <TouchableOpacity
-          style={styles.productButton}
-          onPress={() => {
-            api.delete('/cellPhones/${item._id}')
-            this.loadCelulares()
-          }}
-        >
-          <Text style={styles.productButtonText}>Deletar</Text>
-        </TouchableOpacity>
+        <TouchableOpacity onPress= { () => {
+                    Alert.alert(
+                        'Deletar',
+                        'Deseja realmente deletar?',
+                        [
+                            {
+                                text: 'Não', onPress: () => 
+                                    console.log('Cancel'),
+                                    style: 'cancel'
+                                    
+                                },
+                                {
+                                    text: 'Sim', onPress: () => {
+                                        api.delete(`/cellPhones/${item._id}`)
+                                        .then(res => {
+                                            this.loadCelulares();
+                                            Alert.alert(
+                                                'Pronto',
+                                                'Item deletado com sucesso'
+                                            )
+                                        })
+                                        .catch(err => {
+                                            'Erro',
+                                            'Não foi pssível deletar'
+                                        })
+                                    }
+                                }
+                            
+                        ]
+                    )
+                }} style={styles.productButton}>
+                    <Text style={styles.productButtonText}>Deletar</Text>
+                </TouchableOpacity>
       </View>
     );
   };
@@ -59,6 +93,11 @@ export default class Home extends Component {
           keyExtractor={item => item._id}
           renderItem={this.renderItem}
         />
+        <View>
+          <TouchableOpacity style={styles.productButtonNovo} onPress={this.handleNew}>
+            <Text style={styles.productButtonText}>Novo</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -74,10 +113,11 @@ const styles = StyleSheet.create({
   },
   productContainer: {
     backgroundColor: "#FFF",
-    borderRadius: 5,
+    borderRadius: 10,
     padding: 20,
     marginBottom: 20,
-
+    borderWidth: 1,
+    borderColor: '#00FFFF',
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.4,
@@ -98,7 +138,20 @@ const styles = StyleSheet.create({
   productButton: {
     height: 42,
     borderRadius: 5,
-    backgroundColor: "#ddd",
+    backgroundColor: "#008B8B",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    elevation: 1,
+    marginHorizontal: 30
+  },
+  productButtonNovo: {
+    height: 44,
+    backgroundColor: "#008B8B",
     justifyContent: "center",
     alignItems: "center",
     marginTop: 15,
@@ -110,7 +163,7 @@ const styles = StyleSheet.create({
   },
   productButtonText: {
     fontSize: 16,
-    color: "#333",
+    color: "#fafafa",
     fontWeight: "bold"
   }
 });
